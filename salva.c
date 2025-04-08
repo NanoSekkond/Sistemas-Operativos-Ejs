@@ -12,30 +12,32 @@ int generate_random_number(){
 
 void hijo(int* fdEntrada, int* fdSalida) {
 	int entrada;
-	while(1) {
-		printf("[%d] Voy a leer\n", getpid());
-		read(fdEntrada[PIPE_READ], &entrada, sizeof(entrada));
+	while(read(fdEntrada[PIPE_READ], &entrada, sizeof(entrada))) {
+		//printf("[%d] Voy a leer desde: %d\n", getpid(), fdEntrada[PIPE_READ]);
 		printf("[%d] Recibi %d\n", getpid(), entrada);
 		entrada++;
 		write(fdSalida[PIPE_WRITE], &entrada, sizeof(entrada));
 	}
+	printf("[%d] no me va a llegar nada, chau\n", getpid());
+	close(fdSalida[PIPE_WRITE]);
+	exit(0);
 }
 
 void hijoElegido(int* fdEntrada, int* fdSalida, int* fdPadre, int c) {
 	int numeroSecreto;
 	numeroSecreto = generate_random_number();
 
-	printf("[%d] Soy el elegido, recibi %d, y genere %d\n", getpid(), c, numeroSecreto);
+	printf("[%d] Soy el elegido, recibi: %d, y genere el numero secreto: %d\n", getpid(), c, numeroSecreto);
 	int entrada = c;
 	while(1) {
 		entrada++;
-		printf("[%d] Voy a escribir en %d\n", getpid(), fdSalida);
 		write(fdSalida[PIPE_WRITE], &entrada, sizeof(entrada));
-		printf("[%d] Voy a leer\n", getpid());
 		read(fdEntrada[PIPE_READ], &entrada, sizeof(entrada));
 		printf("[%d] Recibi %d\n", getpid(), entrada);
 		if (entrada >= numeroSecreto) {
 			write(fdPadre[PIPE_WRITE], &entrada, sizeof(entrada));
+			close(fdSalida[PIPE_WRITE]);
+			exit(0);
 		}
 	}
 }
@@ -57,36 +59,45 @@ int main(int argc, char **argv)
     
 	int fd[n][2];
 
-	for (int i = 0; i < n-1; i++) {
+	for (int i = 0; i < n; i++) {
 		pipe(fd[i]);
 	}
 
 	int fdInicialAPadre[2];
 	pipe(fdInicialAPadre);
 
-	int hijos[n];
-
 	for (int i = 0; i < n; i++) {
 
 		pid_t pidOrZero = fork();
-		hijos[i] = pidOrZero;
-		int prev_i = (i-1+n)%n;
 		int next_i = (i+1) % n;
 		// Si es hijo
 		if (!pidOrZero) {
+			for(int j = 0; j < n; j++) {
+				if (next_i != j) {
+					close(fd[j][PIPE_WRITE]);
+				}
+			}
 			if (i == start) {
-				hijoElegido(fd[prev_i], fd[next_i], fdInicialAPadre, buffer);
+				hijoElegido(fd[i], fd[next_i], fdInicialAPadre, buffer);
 			}
 			else {
-				hijo(fd[prev_i], fd[next_i]);
+				hijo(fd[i], fd[next_i]);
 			}
 		}
+	}
+
+	for(int i = 0; i < n; i++) {
+		close(fd[i][PIPE_WRITE]);
+	}
+
+	for (int i = 0; i < n; i++) {
+		wait(NULL);
 	}
 
 	int resultado;
 	read(fdInicialAPadre[PIPE_READ], &resultado, sizeof(resultado));
 	printf("Resultado: %d\n", resultado);
 
+	exit(0);
     /* COMPLETAR */
 }
-
