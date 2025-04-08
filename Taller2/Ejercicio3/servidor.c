@@ -44,14 +44,14 @@ int calcular(const char *expresion) {
 }
 
 void atenderCliente(int client_socket) {
-    char expresion[255]; 
+    char expresion[255];
     printf("[%d] Arranco mi cliente\n", getpid());
     while (recv(client_socket, &expresion, sizeof(expresion), 0)) {
         printf("[%d] Servidor: recibí %s del cliente!\n", getpid() ,expresion);
-    
+
         int resultado = calcular(expresion);
         printf("El resultado de la operación es: %d\n", resultado);
-        
+
         send(client_socket, &resultado, sizeof(resultado), 0);
     }
     printf("[%d] Ya termino mi cliente\n", getpid());
@@ -59,7 +59,7 @@ void atenderCliente(int client_socket) {
 }
 
 int main() {
-     
+
     // COMPLETAR. Este es un ejemplo de funcionamiento básico.
     // La expresión debe ser recibida como un mensaje del cliente hacia el servidor.
     // Seteamos el socket
@@ -91,51 +91,3 @@ int main() {
     }
     exit(0);
 }
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
-#include <signal.h>
-
-int server_socket;
-
-void endConnection() {
-	printf("\n");
-	close(server_socket);
-	exit(0);
-}
-
-int main() {
-    struct sockaddr_un server_addr;
-
-    server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, "unix_socket");
-
-    server_socket = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Error");
-        exit(1);
-    }
-
-	signal(SIGINT, endConnection);
-
-	while (1) {
-		printf("Escribi una expresion: ");
-		char expresion[255];
-		scanf("%s", &expresion);
-		if (expresion == "exit") {
-			endConnection();
-		}
-		send(server_socket, &expresion, sizeof(expresion), 0);
-	
-		int res;
-		recv(server_socket, &res, sizeof(res), 0);
-		printf("Cliente: recibí %d del servidor!\n", res);
-	}
-}
-

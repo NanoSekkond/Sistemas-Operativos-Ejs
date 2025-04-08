@@ -43,7 +43,7 @@ void hijoElegido(int* fdEntrada, int* fdSalida, int* fdPadre, int c) {
 }
 
 int main(int argc, char **argv)
-{	
+{
 	//Funcion para cargar nueva semilla para el numero aleatorio
 	srand(time(NULL));
 
@@ -53,10 +53,10 @@ int main(int argc, char **argv)
 	start = atoi(argv[3]);
 
 	if (argc != 4){ printf("Uso: anillo <n> <c> <s> \n"); exit(0);}
-    
+
   	/* COMPLETAR */
     printf("Se crearán %i procesos, se enviará el caracter %i desde proceso %i \n", n, buffer, start);
-    
+
 	int fd[n][2];
 
 	for (int i = 0; i < n; i++) {

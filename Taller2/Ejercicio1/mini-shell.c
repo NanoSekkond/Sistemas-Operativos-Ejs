@@ -11,7 +11,7 @@ void hijo(char **programa) {
 }
 
 static int run(char ***progs, size_t count)
-{	
+{
 	int r, status;
 
 	//Reservo memoria para el arreglo de pids
@@ -19,7 +19,6 @@ static int run(char ***progs, size_t count)
 	pid_t *children = malloc(sizeof(*children) * count);
 
 	//TODO: Pensar cuantos procesos necesito. Necesito count procesos.
-
 
 	//TODO: Pensar cuantos pipes necesito. count - 1
 	int fd[count - 1][2];
@@ -31,7 +30,7 @@ static int run(char ***progs, size_t count)
 	//TODO: Para cada proceso hijo:
 			//1. Redireccionar los file descriptors adecuados al proceso
 			//2. Ejecutar el programa correspondiente
-	
+
 	for (int i = 0; i < count; i++) {
 		pid_t pidOrZero = fork();
 		children[i] = pidOrZero;
